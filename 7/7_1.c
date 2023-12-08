@@ -1,12 +1,11 @@
 #include <stdio.h>
+#include <math.h>
 
 #define ACE 12
 #define KING 11
 #define QUEEN 10
 #define JACK 9
 #define TEN 8
-
-// sol 6440
 
 #define INPUT_SIZE 1000
 
@@ -43,30 +42,38 @@ int main(int argc, char** argv) {
 }
 
 int scan_input(mask* ranked_bet, int r) {
-    mask score, card_mask, bet;
+    mask score, card_mask, bet, card_ranking;
     char buffer[6];
     int i;
 
     int counts[ACE+1] = {0};
+    card_ranking = 0UL;
+    score = 0ULL;
 
     for (i = 0; i < 5; ++i) {
         switch((buffer[i] = getchar())) {
             case 'A':
                 ++counts[ACE];
+                score += ACE*pow(ACE+1, 5-i);
                 break;
             case 'K':
                 ++counts[KING];
+                score += KING*pow(ACE+1, 5-i);
                 break;
             case 'Q':
+                score += QUEEN*pow(ACE+1, 5-i);
                 ++counts[QUEEN];
                 break;
             case 'J':
+                score += JACK*pow(ACE+1, 5-i);
                 ++counts[JACK];
                 break;
             case 'T':
+                score += TEN*pow(ACE+1, 5-i);
                 ++counts[TEN];
                 break;
             default:
+                score += (buffer[i] - '0' - 2)*pow(ACE+1, 5-i);
                 ++counts[buffer[i] - '0' - 2];
                 break;
         }
@@ -74,26 +81,27 @@ int scan_input(mask* ranked_bet, int r) {
 
     scanf(" %llu", &bet);
 
-
-    score = 0ULL;
+    int scheme[5] = { 0 };
 
     for (i = 0; i < ACE+1; ++i) {
-        card_mask = 0ULL;
-        if (counts[i] == 0) continue;
+        scheme[counts[i] - 1]++;
+    }
 
-        if (counts[i] == 1) {
-            if (i == 0) continue;
-            card_mask = 1ULL << (i - 1);
-        } else {
-            card_mask = 1ULL << i;
-            card_mask <<= ((counts[i] - 2) * 13 + 12);
-        }
-
-        score |= card_mask;
+    if (scheme[4] == 1)
+        score |= 1ULL << 63;
+    else if (scheme[3] == 1) {
+        score |= 1ULL << 62;
+    } else if (scheme[2] == 1 && scheme[1] == 1) {
+        score |= 1ULL << 61;
+    }  else if (scheme[2] == 1) {
+        score |= 1ULL << 60;
+    } else if (scheme[1] == 2) {
+        score |= 1ULL << 59;
+    } else if (scheme[1] == 1) {
+        score |= 1ULL << 58;
     }
 
     // insert score and bet in array
-    printf("%d\n", r);
     for (; r > 0; --r) {
         if (ranked_bet[(r-1)*2] > score) break;
 
